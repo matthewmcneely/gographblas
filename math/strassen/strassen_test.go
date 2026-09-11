@@ -6,9 +6,8 @@
 package strassen_test
 
 import (
+	"context"
 	"testing"
-
-	"golang.org/x/net/context"
 
 	"github.com/rossmerr/graphblas"
 	"github.com/rossmerr/graphblas/math/strassen"

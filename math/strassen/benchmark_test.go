@@ -1,10 +1,9 @@
 package strassen_test
 
 import (
+	"context"
 	"math/rand"
 	"testing"
-
-	"golang.org/x/net/context"
 
 	"github.com/rossmerr/graphblas"
 	"github.com/rossmerr/graphblas/math/strassen"
