@@ -11,17 +11,21 @@ import (
 	"math"
 
 	"github.com/rossmerr/graphblas"
+	"github.com/rossmerr/graphblas/binaryop"
 	"github.com/rossmerr/graphblas/constraints"
 )
 
 // SingleSource computes the shortest-path distance from source vertex s to
-// every vertex of the weighted directed graph a using Bellman-Ford edge
-// relaxation. a.At(u, v) holds the weight of edge u->v and zero marks an
-// absent edge, so explicit zero-weight edges are not representable.
-// Unreachable vertices report +Inf. Negative edge weights are supported on
-// graphs without negative cycles; when a negative cycle is reachable from
-// s, the distances of vertices on or downstream of the cycle are not
-// meaningful.
+// every vertex of the weighted directed graph a. It is Bellman-Ford in its
+// GraphBLAS form: each round is one matrix-vector multiply over the
+// (min, +) tropical semiring against the transposed graph, advancing every
+// distance by one edge relaxation, folded into the running distances with
+// an element-wise minimum. a.At(u, v) holds the weight of edge u->v and
+// zero marks an absent edge, so explicit zero-weight edges are not
+// representable. Unreachable vertices report +Inf. Negative edge weights
+// are supported on graphs without negative cycles; when a negative cycle
+// is reachable from s, the distances of vertices on or downstream of the
+// cycle are not meaningful.
 func SingleSource[T constraints.Float](ctx context.Context, a graphblas.Matrix[T], s int) graphblas.Vector[T] {
 	n := a.Rows()
 	if a.Columns() != n {
@@ -32,6 +36,10 @@ func SingleSource[T constraints.Float](ctx context.Context, a graphblas.Matrix[T
 		log.Panicf("Source '%+v' is invalid", s)
 	}
 
+	// Distances flow along incoming edges, so multiply by the transpose.
+	at := graphblas.TransposeToCSR(ctx, a)
+	minPlus := binaryop.MinPlus[T]()
+
 	inf := T(math.Inf(1))
 	dist := graphblas.NewDenseVectorN[T](n)
 	for i := 0; i < n; i++ {
@@ -39,8 +47,10 @@ func SingleSource[T constraints.Float](ctx context.Context, a graphblas.Matrix[T
 	}
 	dist.SetVec(s, 0)
 
+	next := graphblas.NewDenseVectorN[T](n)
+
 	// A shortest path uses at most n-1 edges; stop earlier once a full
-	// relaxation round changes nothing.
+	// round changes nothing.
 	for round := 1; round < n; round++ {
 		select {
 		case <-ctx.Done():
@@ -48,20 +58,12 @@ func SingleSource[T constraints.Float](ctx context.Context, a graphblas.Matrix[T
 		default:
 		}
 
+		graphblas.MatrixVectorMultiplyWithSemiring[T](ctx, at, dist, nil, next, minPlus)
+
 		changed := false
-		for iterator := a.Enumerate(); iterator.HasNext(); {
-			u, v, w := iterator.Next()
-			if w == 0 {
-				continue
-			}
-
-			du := dist.AtVec(u)
-			if du == inf {
-				continue
-			}
-
-			if d := du + w; d < dist.AtVec(v) {
-				dist.SetVec(v, d)
+		for i := 0; i < n; i++ {
+			if v := next.AtVec(i); v < dist.AtVec(i) {
+				dist.SetVec(i, v)
 				changed = true
 			}
 		}
