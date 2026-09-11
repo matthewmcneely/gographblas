@@ -439,10 +439,28 @@ func Transpose[T constraints.Type](ctx context.Context, s MatrixLogical[T], mask
 
 // TransposeToCSR swaps the rows and columns and returns a compressed storage by rows (CSR) matrix
 func TransposeToCSR[T constraints.Number](ctx context.Context, s Matrix[T]) Matrix[T] {
-	matrix := NewCSRMatrix[T](s.Columns(), s.Rows())
+	// Collect the entries with rows and columns swapped and bulk-build,
+	// which avoids the per-element insert cost of building through Set.
+	edges := make([]Edge[T], 0, s.Values())
 
-	Transpose[T](ctx, s, nil, matrix)
-	return matrix
+	count := 0
+	for iterator := s.Enumerate(); iterator.HasNext(); {
+		if count&4095 == 0 {
+			select {
+			case <-ctx.Done():
+				return NewCSRMatrixFromEdges[T](s.Columns(), s.Rows(), edges)
+			default:
+			}
+		}
+		count++
+
+		r, c, value := iterator.Next()
+		if !IsZero(value) {
+			edges = append(edges, Edge[T]{From: c, To: r, Weight: value})
+		}
+	}
+
+	return NewCSRMatrixFromEdges[T](s.Columns(), s.Rows(), edges)
 }
 
 // TransposeToCSC swaps the rows and columns and returns a compressed storage by columns (CSC) matrix
