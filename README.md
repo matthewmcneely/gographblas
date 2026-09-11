@@ -46,6 +46,26 @@ frontier := breadthfirst.Search[float64](ctx, g, 3, func(v graphblas.Vector[floa
 })
 ```
 
+### PageRank (`centrality`)
+
+`PageRank` ranks vertices by the stationary probability that a random surfer occupies them, computed by power iteration. Each vertex spreads its rank across its out-links in proportion to edge weight, rank held by dangling vertices is redistributed uniformly, and iteration stops when the L1 change drops below the tolerance. The returned ranks sum to 1.
+
+```go
+ranks := centrality.PageRank[float64](ctx, g) // damping 0.85, tolerance 1e-6, max 100 iterations
+ranks = centrality.PageRankWithOptions[float64](ctx, g, 0.9, 1e-9, 200)
+```
+
+### Single-source shortest path (`shortestPath`)
+
+`SingleSource` computes the distance from a source vertex to every other vertex by Bellman-Ford edge relaxation. `a.At(u, v)` is the weight of edge `u -> v` and zero marks an absent edge; unreachable vertices report `+Inf`. Negative weights are supported on graphs without negative cycles. Note the package name is `shortestpath` while the import path ends in `shortestPath`.
+
+```go
+import shortestpath "github.com/rossmerr/graphblas/shortestPath"
+
+dist := shortestpath.SingleSource[float64](ctx, g, 0)
+unreachable := math.IsInf(dist.AtVec(4), 1)
+```
+
 ### GraphBLAS primitives (root package)
 
 The building blocks the algorithms compose, most of which accept an optional mask to control which output cells are written:
@@ -97,7 +117,7 @@ sorted := sort.BubbleRow(ctx, words) // words is a graphblas.MatrixRune
 
 ### Not yet implemented
 
-The `centrality` (PageRank, betweenness, closeness), `clustering` (Markov, spectral, peer pressure, local), and `shortestPath` (single-source, all-pairs, temporal) packages are declaration-only placeholders inherited from upstream: the files compile but contain no implementations. The primitives above are the pieces those algorithms would compose from.
+Betweenness and closeness centrality, the `clustering` package (Markov, spectral, peer pressure, local), and the all-pairs and temporal shortest-path variants are declaration-only placeholders inherited from upstream: the files compile but contain no implementations. The primitives above are the pieces those algorithms would compose from.
 
 ## About this fork
 
@@ -108,6 +128,7 @@ What changed:
 - `Multiply` and `Add` on dense `float64` matrices with a nil mask now run flat row kernels (`denseFast.go`) instead of the per-element interface path. Multiplication uses ikj ordering, so the inner step is a contiguous axpy over each output row.
 - The axpy/add kernels have two build variants: `kernels_simd.go` under `//go:build goexperiment.simd`, and scalar fallbacks in `kernels_scalar.go`. The default build has no dependency on the experimental API.
 - Everything else (masked operations, sparse formats, other element types) is unchanged and falls through to the original generic path.
+- This fork also implements PageRank and single-source shortest path (see Algorithms above) and fixes an upstream `SparseVector` index-lookup bug that compared an element index against the stored entry count, which made high-index entries unreadable and silently dropped terms from sparse multiplies.
 
 Measured on an Apple M4 Pro with `go1.27.0`, 100x100 dense `float64`:
 
