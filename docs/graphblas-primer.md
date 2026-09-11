@@ -105,6 +105,8 @@ Where each shipped algorithm actually sits on the "is it matrix algebra?" spectr
 |---|---|---|
 | Breadth-first search | yes | one masked plus-times mxv per level |
 | Single-source shortest path | yes | one min-plus semiring mxv per round |
+| Betweenness centrality | yes | masked mxv sweeps forward, plain mxv gathers backward |
+| Closeness centrality | yes | min-plus semiring mxv rounds per source |
 | PageRank | mostly | one mxv per iteration; scalar vector loops around it |
 | `Between` (Dijkstra) | deliberately no | binary heap and adjacency scan |
 | Strassen multiplication | yes, by definition | recursive block mxm |
@@ -120,11 +122,15 @@ next = at (min,+) dist ;  dist = min(dist, next) elementwise
 
 stopping when a round changes nothing or after n-1 rounds. The k-th round holds shortest distances using at most k edges. Nothing about the relaxation logic lives in algorithm code; the semiring is the algorithm.
 
+**Betweenness centrality** (`centrality.Betweenness`) is Brandes' algorithm and the most matrix-shaped code in the repo: both of its phases are multiplies. The forward phase is BFS carrying shortest-path *counts* instead of booleans, one plus-times mxv per level against the transposed pattern, with the accumulated count vector doubling as the visited mask. The backward phase walks the levels deepest-first: each vertex offers `(1 + delta) / sigma`, its predecessors gather the offers along their out-edges with an mxv against the untransposed pattern, and scale by their own counts. The graph is treated as unweighted, since fewest-hops is what Brandes' level structure means, and the weights are deliberately replaced by 1s in the pattern matrices so the plus-times multiply counts paths rather than summing weights. The scalar work between multiplies is per-level bookkeeping over dense vectors.
+
+**Closeness centrality** (`centrality.Closeness`) is n runs of the same min-plus machinery as `SingleSource`, sharing one transpose across all sources, followed by a scalar scoring loop (sum the finite distances, apply the Wasserman-Faust scaling). It inherits weighted distances from the semiring, which also means it pays the semiring dispatch cost per stored entry where betweenness rides the native plus-times kernels.
+
 **PageRank** (`centrality.PageRank`) is a hybrid, and representative of real-world GraphBLAS code. The expensive step, pulling rank along in-links, is a plus-times mxv against the transposed graph, so it rides the sparse kernels. The bookkeeping around it (dividing rank by out-degree, collecting dangling mass, applying damping and teleport, measuring the L1 delta) runs as plain loops over dense vectors. Each of those could be dressed up as element-wise algebra; the loops are clearer and cost O(n) against the multiply's O(edges).
 
 **Point-to-point shortest path** (`shortestpath.Between`) is deliberately not matrix algebra: it is Dijkstra with a binary heap and early exit. A priority queue settles one vertex at a time in a data-dependent order, which has no useful matrix formulation, and the early exit (stop the moment the target settles) is the entire point of a point-to-point query. Bulk semiring iterations cannot stop early that way. This mirrors the wider ecosystem: even SuiteSparse-based stacks step outside the algebra for this query shape, and LAGraph's SSSP uses delta-stepping rather than Dijkstra precisely because Dijkstra will not vectorize.
 
-**The stubs** (`centrality` betweenness and closeness, `clustering`, all-pairs and temporal shortest paths) are unimplemented, but all of them are matrix-native on paper, which makes them approachable first contributions: betweenness is BFS-style forward sweeps plus a backward accumulation, both mxv-shaped; Markov clustering alternates mxm (expansion) with element-wise powers and rescaling (inflation); all-pairs shortest paths is repeated min-plus multiplication, `A^(n-1)` over the tropical semiring.
+**The stubs** (`clustering`, all-pairs and temporal shortest paths) are unimplemented, but matrix-native on paper, which makes them approachable first contributions: Markov clustering alternates mxm (expansion) with element-wise powers and rescaling (inflation); all-pairs shortest paths is repeated min-plus multiplication, `A^(n-1)` over the tropical semiring.
 
 ## Where the algebra stops: performance and hardware
 
