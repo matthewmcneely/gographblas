@@ -188,7 +188,7 @@ func (s *SparseVector[T]) remove(pointer int) {
 
 func (s *SparseVector[T]) index(i int) (int, int, error) {
 	length := len(s.indices)
-	if i > length {
+	if length == 0 || i > s.indices[length-1] {
 		return length, length, nil
 	}
 
