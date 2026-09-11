@@ -25,7 +25,21 @@ Measured on an Apple M4 Pro with `go1.27.0`, 100x100 dense `float64`:
 | `axpyFloat64`, n=4096 | n/a | **1.07 µs** | 1.51 µs |
 | `axpyFloat32`, n=4096 | n/a | 1.07 µs | **0.78 µs** |
 
-The headline is that the kernel restructure delivers the ~30x, not the vector instructions. On 128-bit NEON, `float64` SIMD is slower than the scalar kernels: each vector op carries only 2 lanes but pays slice and bounds-check overhead per load/store plus a runtime width-dispatch call, while Go's arm64 backend already fuses the scalar loop into `FMADD`. `float32` (4 lanes) is where SIMD starts to win, and the wider amd64 vectors (AVX2, AVX-512) should shift the balance further, though that build is unmeasured here. Sparse (CSR/CSC) kernels stay scalar on every architecture: the Go 1.27 `simd` packages ship no gather/scatter.
+The headline on arm64 is that the kernel restructure delivers the ~30x, not the vector instructions. On 128-bit NEON, `float64` SIMD is slower than the scalar kernels: each vector op carries only 2 lanes but pays slice and bounds-check overhead per load/store plus a runtime width-dispatch call, while Go's arm64 backend already fuses the scalar loop into `FMADD`. `float32` (4 lanes) is where SIMD starts to win on that hardware. Wider amd64 vectors flip the `float64` verdict outright.
+
+The same branch on a GCP `c4d-standard-8` (AMD EPYC 9B45, Zen 5, full-width AVX-512), where Go selects `vector=512 bits`:
+
+| Benchmark | scalar kernels (default build) | `GOEXPERIMENT=simd` | speedup |
+|---|---|---|---|
+| dense multiply, 100x100 | 267 µs | **188 µs** | 1.4x |
+| dense multiply, 400x400 | 17.1 ms | **10.3 ms** | 1.7x |
+| dense add, 100x100 | 20 µs | 20 µs | 1.0x |
+| `axpyFloat64`, n=4096 | 1.55 µs | **0.60 µs** | 2.6x |
+| `axpyFloat32`, n=4096 | 1.50 µs | **0.28 µs** | 5.3x |
+
+At 8 `float64` lanes the per-op overhead amortizes and the kernels pull ahead. The `float32` gain is larger than the lane ratio suggests because the scalar baseline is op-bound: scalar `float32` axpy runs no faster than scalar `float64`, so SIMD is what converts the narrower element into throughput. End-to-end multiply improves less than the kernel (1.4x to 1.7x) because the remaining time sits outside the axpy inner loop: output-row zeroing, the runtime width-dispatch call per kernel invocation, and row-pointer chasing in the `[][]float64` layout. Dense add is unchanged since it is dominated by the output copy and its allocations rather than arithmetic. The scalar column is the default `GOAMD64=v1` build, which does not fuse FMA, so part of the kernel gap is the weaker amd64 scalar baseline.
+
+Sparse (CSR/CSC) kernels stay scalar on every architecture: the Go 1.27 `simd` packages ship no gather/scatter.
 
 Run the comparison yourself (requires Go 1.27):
 
