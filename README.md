@@ -6,6 +6,99 @@
 
 A sparse linear algebra library implementing may of the ideas from the [GraphBLAS Forum](https://graphblas.github.io/) in Go.
 
+Sparse Matrix Formats:
+Compressed Sparse Row (CSR)
+Compressed Sparse Column (CSC)
+Sparse Vector
+
+Supports bool | int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64 | uintptr | float32 | float64
+
+```go
+array := [][]float64{
+		[]float64{0, 0, 0, 1, 0, 0, 0},
+		[]float64{1, 0, 0, 0, 0, 0, 0},
+		[]float64{0, 0, 0, 1, 0, 1, 1},
+		[]float64{1, 0, 0, 0, 0, 0, 1},
+		[]float64{0, 1, 0, 0, 0, 0, 1},
+		[]float64{0, 0, 1, 0, 1, 0, 0},
+		[]float64{0, 1, 0, 0, 0, 0, 0},
+    }
+
+g := graphblas.NewDenseMatrixFromArrayN(array)
+
+atx := breadthfirst.Search[float64](context.Background(), g, 3, func(i graphblas.Vector[float64]) bool {
+    return i.AtVec(5) == 1
+})
+```
+
+## Algorithms
+
+The examples below reuse `g` from the snippet above and assume `ctx := context.Background()`.
+
+### Breadth-first search (`breadthfirst`)
+
+`Search` runs a level-synchronous BFS from a source vertex, expressed the GraphBLAS way: the frontier is a vector, each level is one masked matrix-vector multiply, and the visited vector masks off vertices already seen. The callback receives the new frontier after every level and returns true to stop the traversal; the return value is the frontier at the level where the search stopped.
+
+```go
+// Traverse from vertex 3, stopping once vertex 5 is reachable.
+frontier := breadthfirst.Search[float64](ctx, g, 3, func(v graphblas.Vector[float64]) bool {
+	return v.AtVec(5) > 0
+})
+```
+
+### GraphBLAS primitives (root package)
+
+The building blocks the algorithms compose, most of which accept an optional mask to control which output cells are written:
+
+- Multiplication: `MatrixMatrixMultiply` (mxm), `MatrixVectorMultiply` (mxv), `VectorMatrixMultiply` (vxm)
+- Element-wise: `ElementWiseMatrixMultiply`, `ElementWiseMatrixAdd`, and their vector forms, plus `Add`, `Subtract`, `Scalar`, `Negative`
+- Structural: `Transpose`, `TransposeToCSR`, `TransposeToCSC`, `Equal`, `NotEqual`
+- Reductions: `ReduceMatrixToVector`, `ReduceMatrixToScalar`, and `WithMonoID` variants that take a custom monoid from the `binaryop` package
+- `Apply` maps a `unaryop.UnaryOp` over every element
+
+```go
+result := graphblas.NewDenseVectorN[float64](g.Rows())
+graphblas.MatrixVectorMultiply[float64](ctx, g, frontier, nil, result)
+```
+
+### Strassen multiplication (`math/strassen`)
+
+Divide-and-conquer matrix multiplication that trades 8 recursive block multiplies for 7 plus extra additions. At or below the crossover size (default 64) it switches to standard `MatrixMatrixMultiply`, which on this fork lands in the dense `float64` fast path.
+
+```go
+c := strassen.Multiply[float64](ctx, a, b)
+c = strassen.MultiplyCrossoverPoint[float64](ctx, a, b, 128) // tune the switch-over size
+```
+
+### Reduced row echelon form (`math/reduced`)
+
+Gauss-Jordan elimination. Returns a new matrix and leaves the input untouched.
+
+```go
+r := reduced.Reduced[float64](m)
+```
+
+### Matrix predicates (`math/symmetric`, `math/skewsymmetric`)
+
+Square-matrix checks built on `Transpose` and `Equal`.
+
+```go
+symmetric.Symmetric[float64](m)         // true when m equals its transpose
+skewsymmetric.SkewSymmetric[float64](m) // true when m equals the negative of its transpose
+```
+
+### Sorting (`sort`)
+
+`BubbleRow` and `BubbleColumns` sort the rows or columns of a rune matrix lexicographically, comparing whole rows or columns with `graphblas.Compare`.
+
+```go
+sorted := sort.BubbleRow(ctx, words) // words is a graphblas.MatrixRune
+```
+
+### Not yet implemented
+
+The `centrality` (PageRank, betweenness, closeness), `clustering` (Markov, spectral, peer pressure, local), and `shortestPath` (single-source, all-pairs, temporal) packages are declaration-only placeholders inherited from upstream: the files compile but contain no implementations. The primitives above are the pieces those algorithms would compose from.
+
 ## About this fork
 
 This fork moves the module to Go 1.27 and adds specialized kernels for unmasked dense `float64` operations, with optional SIMD variants built on Go 1.27's experimental portable [`simd` package](https://go.dev/doc/go1.27).
@@ -51,27 +144,3 @@ GOEXPERIMENT=simd go test -run TestSIMDInfo -v .  # logs vector width + emulatio
 
 The `simd` package is experimental and its API may change, which is why the SIMD variants are opt-in and the default build stays scalar.
 
-Sparse Matrix Formats:
-Compressed Sparse Row (CSR)
-Compressed Sparse Column (CSC)
-Sparse Vector
-
-Supports bool | int | int8 | int16 | int32 | int64 | uint | uint8 | uint16 | uint32 | uint64 | uintptr | float32 | float64
-
-```go
-array := [][]float64{
-		[]float64{0, 0, 0, 1, 0, 0, 0},
-		[]float64{1, 0, 0, 0, 0, 0, 0},
-		[]float64{0, 0, 0, 1, 0, 1, 1},
-		[]float64{1, 0, 0, 0, 0, 0, 1},
-		[]float64{0, 1, 0, 0, 0, 0, 1},
-		[]float64{0, 0, 1, 0, 1, 0, 0},
-		[]float64{0, 1, 0, 0, 0, 0, 0},
-    }
-
-g := graphblas.NewDenseMatrixFromArrayN(array)
-
-atx := breadthfirst.Search[float64](context.Background(), g, 3, func(i graphblas.Vector[float64]) bool {
-    return i.AtVec(5) == 1
-})
-```
