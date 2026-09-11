@@ -88,6 +88,66 @@ func MatrixVectorMultiply[T constraints.Number](ctx context.Context, s Matrix[T]
 	multiply[T](ctx, s, m, mask, vector)
 }
 
+// MatrixVectorMultiplyWithSemiring multiplies a matrix by a vector over an
+// arbitrary semiring: each output element reduces with the semiring's
+// additive monoid, seeded at its Zero, over the semiring product of the
+// row's entries with the vector,
+//
+//	vector[r] = ⊕ { a[r][j] ⊗ m[j] : a[r][j] stored and non-zero }
+//
+// Matrix entries equal to the zero value of T mark absent edges (the
+// library's sparse convention) and do not participate, for dense and
+// sparse inputs alike; vector entries always participate. Over
+// binaryop.PlusTimes this matches MatrixVectorMultiply; binaryop.MinPlus
+// advances shortest-path distances by one edge relaxation; binaryop.MaxMin
+// advances widest-path capacities.
+func MatrixVectorMultiplyWithSemiring[T constraints.Number](ctx context.Context, s Matrix[T], m Vector[T], mask Mask, vector Vector[T], semiring binaryop.Semiring[T]) {
+	if m.Rows() != s.Columns() {
+		log.Panicf("Can not multiply matrices found length mismatch %+v, %+v", m.Rows(), s.Columns())
+	}
+
+	if mask == nil {
+		mask = NewEmptyMask(vector.Rows(), vector.Columns())
+	}
+
+	if mask.Rows() != vector.Rows() {
+		log.Panicf("Can not apply mask found rows mismatch %+v, %+v", mask.Rows(), vector.Rows())
+	}
+
+	if mask.Columns() != vector.Columns() {
+		log.Panicf("Can not apply mask found columns mismatch %+v, %+v", mask.Columns(), vector.Columns())
+	}
+
+	if sparseMatrixVectorSemiring(ctx, s, m, mask, vector, semiring) {
+		return
+	}
+
+	add := semiring.Add()
+	multiply := semiring.Multiply()
+	zero := add.Zero()
+
+	for r := 0; r < s.Rows(); r++ {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
+
+		sum := zero
+		row := s.RowsAtToArray(r)
+		for j, v := range row {
+			if IsZero(v) {
+				continue
+			}
+			sum = add.Apply(sum, multiply.Apply(v, m.AtVec(j)))
+		}
+
+		if !mask.Element(r, 0) {
+			vector.SetVec(r, sum)
+		}
+	}
+}
+
 func elementWiseMultiply[T constraints.Number](ctx context.Context, s, m Matrix[T], mask Mask, matrix Matrix[T]) {
 	var iterator Enumerate[T]
 	var source Matrix[T]
