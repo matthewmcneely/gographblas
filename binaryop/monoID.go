@@ -12,6 +12,7 @@ import (
 // MonoIDFloat64 is a set of float64's that closed under an associative binary operation
 type MonoID[T constraints.None] interface {
 	Zero() T
+	Apply(T, T) T
 	Reduce(done <-chan struct{}, slice <-chan T) <-chan T
 }
 
