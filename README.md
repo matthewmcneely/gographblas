@@ -6,6 +6,8 @@
 
 A sparse linear algebra library implementing may of the ideas from the [GraphBLAS Forum](https://graphblas.github.io/) in Go.
 
+This fork adds specialized kernels for unmasked dense float64 operations, with optional SIMD variants built on Go 1.27's experimental portable `simd` package
+
 New to GraphBLAS? Start with the [GraphBLAS primer](docs/graphblas-primer.md): what "graphs as matrices" buys you, how this library's operations map onto the idea, and where the code uses matrix algebra versus deliberate scalar implementations.
 
 Sparse Matrix Formats:
