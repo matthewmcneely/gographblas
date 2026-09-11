@@ -64,7 +64,7 @@ ranks = centrality.PageRankWithOptions[float64](ctx, g, 0.9, 1e-9, 200)
 
 ### Shortest paths (`shortestPath`)
 
-`SingleSource` computes the distance from a source vertex to every other vertex by Bellman-Ford edge relaxation. `a.At(u, v)` is the weight of edge `u -> v` and zero marks an absent edge; unreachable vertices report `+Inf`. Negative weights are supported on graphs without negative cycles.
+`SingleSource` computes the distance from a source vertex to every other vertex. It is Bellman-Ford in its GraphBLAS form: each round is one `MatrixVectorMultiplyWithSemiring` over the `(min, +)` tropical semiring against the transposed graph, folded into the running distances with an element-wise minimum. `a.At(u, v)` is the weight of edge `u -> v` and zero marks an absent edge; unreachable vertices report `+Inf`. Negative weights are supported on graphs without negative cycles.
 
 `Between` answers the point-to-point question: the distance between two specific vertices plus the path that achieves it, as vertex indices from source to target. It runs Dijkstra with early exit, so a query explores only the region of the graph nearer than the target; weights must be non-negative (fall back to `SingleSource` for negative weights).
 
@@ -88,6 +88,7 @@ The building blocks the algorithms compose, most of which accept an optional mas
 - Structural: `Transpose`, `TransposeToCSR`, `TransposeToCSC`, `Equal`, `NotEqual`
 - Reductions: `ReduceMatrixToVector`, `ReduceMatrixToScalar`, and `WithMonoID` variants that take a custom monoid from the `binaryop` package
 - `Apply` maps a `unaryop.UnaryOp` over every element
+- `MatrixVectorMultiplyWithSemiring` runs mxv over any `binaryop.Semiring`, the GraphBLAS move that turns one multiply into different algorithms. Stock semirings: `PlusTimes` (ordinary arithmetic), `MinPlus` (one multiply advances shortest-path distances by an edge relaxation), `MaxMin` (widest-path capacities); `NewSemiring` builds custom ones, such as min-plus over `int` with an explicit identity. Only stored, non-zero matrix entries participate, and the CSR/CSC fast paths apply.
 
 ```go
 result := graphblas.NewDenseVectorN[float64](g.Rows())
