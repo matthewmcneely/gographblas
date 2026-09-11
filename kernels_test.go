@@ -25,6 +25,19 @@ func almostEqual(a, b float64) bool {
 	return diff <= 1e-12*scale
 }
 
+// almostEqual32 compares float32 results against the fused (math.FMA)
+// reference. Scalar amd64 builds round the multiply and add separately
+// (the compiler only contracts to FMA on arm64), which can differ from
+// the fused reference by a float32 ulp, so the tolerance is float32-scaled.
+func almostEqual32(a, b float32) bool {
+	if a == b {
+		return true
+	}
+	diff := math.Abs(float64(a) - float64(b))
+	scale := math.Max(math.Abs(float64(a)), math.Abs(float64(b)))
+	return diff <= 1e-6*scale
+}
+
 // Lengths chosen to cover empty slices, tails shorter than a vector, and
 // exact multiples of every plausible lane count (2, 4, 8).
 var kernelLengths = []int{0, 1, 2, 3, 5, 7, 8, 9, 15, 16, 17, 63, 64, 100, 129}
@@ -72,7 +85,7 @@ func TestAxpyFloat32(t *testing.T) {
 		axpyFloat32(dst, alpha, x)
 
 		for i := 0; i < n; i++ {
-			if !almostEqual(float64(dst[i]), float64(want[i])) {
+			if !almostEqual32(dst[i], want[i]) {
 				t.Fatalf("n=%d: dst[%d] = %v, want %v", n, i, dst[i], want[i])
 			}
 		}
