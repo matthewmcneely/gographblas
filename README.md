@@ -62,15 +62,21 @@ ranks := centrality.PageRank[float64](ctx, g) // damping 0.85, tolerance 1e-6, m
 ranks = centrality.PageRankWithOptions[float64](ctx, g, 0.9, 1e-9, 200)
 ```
 
-### Single-source shortest path (`shortestPath`)
+### Shortest paths (`shortestPath`)
 
-`SingleSource` computes the distance from a source vertex to every other vertex by Bellman-Ford edge relaxation. `a.At(u, v)` is the weight of edge `u -> v` and zero marks an absent edge; unreachable vertices report `+Inf`. Negative weights are supported on graphs without negative cycles. Note the package name is `shortestpath` while the import path ends in `shortestPath`.
+`SingleSource` computes the distance from a source vertex to every other vertex by Bellman-Ford edge relaxation. `a.At(u, v)` is the weight of edge `u -> v` and zero marks an absent edge; unreachable vertices report `+Inf`. Negative weights are supported on graphs without negative cycles.
+
+`Between` answers the point-to-point question: the distance between two specific vertices plus the path that achieves it, as vertex indices from source to target. It runs Dijkstra with early exit, so a query explores only the region of the graph nearer than the target; weights must be non-negative (fall back to `SingleSource` for negative weights).
+
+Note the package name is `shortestpath` while the import path ends in `shortestPath`.
 
 ```go
 import shortestpath "github.com/rossmerr/graphblas/shortestPath"
 
 dist := shortestpath.SingleSource[float64](ctx, g, 0)
 unreachable := math.IsInf(dist.AtVec(4), 1)
+
+miles, route := shortestpath.Between[float64](ctx, g, 0, 3) // route holds the vertices, e.g. [0 1 3]
 ```
 
 ### GraphBLAS primitives (root package)
