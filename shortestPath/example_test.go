@@ -45,3 +45,38 @@ func ExampleSingleSource() {
 	// denver: 1326
 	// chicago: +Inf
 }
+
+// ExampleBetween finds the route between two specific cities: the direct
+// Seattle-Boise road (496) beats going through Portland (174 + 430), so
+// the shortest route to Denver runs Seattle -> Boise -> Denver.
+func ExampleBetween() {
+	const (
+		seattle = iota
+		portland
+		boise
+		denver
+		numCities
+	)
+
+	roads := graphblas.NewCSRMatrixFromEdges(numCities, numCities, []graphblas.Edge[float64]{
+		{From: seattle, To: portland, Weight: 174},
+		{From: seattle, To: boise, Weight: 496},
+		{From: portland, To: boise, Weight: 430},
+		{From: boise, To: denver, Weight: 830},
+	})
+
+	dist, path := shortestpath.Between[float64](context.Background(), roads, seattle, denver)
+
+	names := []string{"seattle", "portland", "boise", "denver"}
+	route := ""
+	for i, v := range path {
+		if i > 0 {
+			route += " -> "
+		}
+		route += names[v]
+	}
+
+	fmt.Printf("%v miles via %s\n", dist, route)
+	// Output:
+	// 1326 miles via seattle -> boise -> denver
+}
