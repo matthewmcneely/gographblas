@@ -16,26 +16,30 @@ func TestSIMDInfo(t *testing.T) {
 	t.Log(simdInfo())
 }
 
+// The kernels and the math.FMA references legitimately differ: scalar
+// amd64 builds round the multiply and add separately (the compiler only
+// contracts to FMA on arm64), while the SIMD kernels and arm64 scalar
+// code fuse. That difference is a few ulps of the operands, but when the
+// sum cancels to near zero it is unbounded relative to the result, so
+// both comparisons carry an absolute term sized to the O(1) test data in
+// addition to the relative one.
+
 func almostEqual(a, b float64) bool {
 	if a == b {
 		return true
 	}
 	diff := math.Abs(a - b)
 	scale := math.Max(math.Abs(a), math.Abs(b))
-	return diff <= 1e-12*scale
+	return diff <= 1e-12*scale+1e-12
 }
 
-// almostEqual32 compares float32 results against the fused (math.FMA)
-// reference. Scalar amd64 builds round the multiply and add separately
-// (the compiler only contracts to FMA on arm64), which can differ from
-// the fused reference by a float32 ulp, so the tolerance is float32-scaled.
 func almostEqual32(a, b float32) bool {
 	if a == b {
 		return true
 	}
 	diff := math.Abs(float64(a) - float64(b))
 	scale := math.Max(math.Abs(float64(a)), math.Abs(float64(b)))
-	return diff <= 1e-6*scale
+	return diff <= 1e-6*scale+1e-6
 }
 
 // Lengths chosen to cover empty slices, tails shorter than a vector, and
