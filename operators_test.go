@@ -6,11 +6,10 @@
 package graphblas_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/rossmerr/graphblas"
-
-	"golang.org/x/net/context"
 )
 
 func setupMatrix(m graphblas.MatrixLogical[float64]) {
