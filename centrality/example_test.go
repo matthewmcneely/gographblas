@@ -45,3 +45,67 @@ func ExamplePageRank() {
 	// blog: 0.220
 	// contact: 0.038
 }
+
+// ExampleBetweenness finds the broker in a small org: every path between
+// the two analysts and the two field teams runs through the lead, so the
+// lead carries all four pairs.
+func ExampleBetweenness() {
+	const (
+		ana = iota
+		ben
+		lead
+		cam
+		dee
+		numPeople
+	)
+
+	reports := graphblas.NewCSRMatrixFromEdges(numPeople, numPeople, []graphblas.Edge[float64]{
+		{From: ana, To: lead, Weight: 1},
+		{From: ben, To: lead, Weight: 1},
+		{From: lead, To: cam, Weight: 1},
+		{From: lead, To: dee, Weight: 1},
+	})
+
+	bc := centrality.Betweenness[float64](context.Background(), reports)
+
+	for i, name := range []string{"ana", "ben", "lead", "cam", "dee"} {
+		fmt.Printf("%s: %v\n", name, bc.AtVec(i))
+	}
+	// Output:
+	// ana: 0
+	// ben: 0
+	// lead: 4
+	// cam: 0
+	// dee: 0
+}
+
+// ExampleCloseness scores how quickly each depot in a delivery network
+// reaches the rest, on weighted travel times. Dispatch reaches everything
+// cheaply; the final depot reaches nothing.
+func ExampleCloseness() {
+	const (
+		dispatch = iota
+		north
+		south
+		depot
+		numSites
+	)
+
+	routes := graphblas.NewCSRMatrixFromEdges(numSites, numSites, []graphblas.Edge[float64]{
+		{From: dispatch, To: north, Weight: 1},
+		{From: dispatch, To: south, Weight: 2},
+		{From: north, To: depot, Weight: 3},
+		{From: south, To: depot, Weight: 1},
+	})
+
+	c := centrality.Closeness[float64](context.Background(), routes)
+
+	for i, name := range []string{"dispatch", "north", "south", "depot"} {
+		fmt.Printf("%s: %.3f\n", name, c.AtVec(i))
+	}
+	// Output:
+	// dispatch: 0.500
+	// north: 0.111
+	// south: 0.333
+	// depot: 0.000
+}

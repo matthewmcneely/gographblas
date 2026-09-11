@@ -64,6 +64,18 @@ ranks := centrality.PageRank[float64](ctx, g) // damping 0.85, tolerance 1e-6, m
 ranks = centrality.PageRankWithOptions[float64](ctx, g, 0.9, 1e-9, 200)
 ```
 
+### Betweenness and closeness (`centrality`)
+
+`Betweenness` is Brandes' algorithm in its GraphBLAS form: for each source, forward breadth-first sweeps propagate shortest-path counts as masked matrix-vector multiplies, then a backward pass gathers each vertex's dependency along its out-edges, also as multiplies. The graph is treated as unweighted (pattern only) and scores are raw pair counts with endpoints excluded. `BetweennessFromSources` restricts the sweep to a sample of sources, the standard approximation for large graphs.
+
+`Closeness` scores each vertex by the reciprocal average shortest-path distance to the vertices it reaches, scaled by the fraction reached (Wasserman-Faust), so disconnected graphs stay comparable. Distances are weighted, computed as min-plus semiring rounds per source over one shared transpose.
+
+```go
+bc := centrality.Betweenness[float64](ctx, g)                            // exact, all sources
+bc = centrality.BetweennessFromSources[float64](ctx, g, []int{0, 7, 42}) // sampled approximation
+cl := centrality.Closeness[float64](ctx, g)
+```
+
 ### Shortest paths (`shortestPath`)
 
 `SingleSource` computes the distance from a source vertex to every other vertex. It is Bellman-Ford in its GraphBLAS form: each round is one `MatrixVectorMultiplyWithSemiring` over the `(min, +)` tropical semiring against the transposed graph, folded into the running distances with an element-wise minimum. `a.At(u, v)` is the weight of edge `u -> v` and zero marks an absent edge; unreachable vertices report `+Inf`. Negative weights are supported on graphs without negative cycles.
@@ -133,7 +145,7 @@ sorted := sort.BubbleRow(ctx, words) // words is a graphblas.MatrixRune
 
 ### Not yet implemented
 
-Betweenness and closeness centrality, the `clustering` package (Markov, spectral, peer pressure, local), and the all-pairs and temporal shortest-path variants are declaration-only placeholders inherited from upstream: the files compile but contain no implementations. The primitives above are the pieces those algorithms would compose from.
+The `clustering` package (Markov, spectral, peer pressure, local) and the all-pairs and temporal shortest-path variants are declaration-only placeholders inherited from upstream: the files compile but contain no implementations. The primitives above are the pieces those algorithms would compose from.
 
 ## About this fork
 
