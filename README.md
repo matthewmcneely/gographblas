@@ -129,6 +129,7 @@ What changed:
 - The axpy/add kernels have two build variants: `kernels_simd.go` under `//go:build goexperiment.simd`, and scalar fallbacks in `kernels_scalar.go`. The default build has no dependency on the experimental API.
 - Everything else (masked operations, sparse formats, other element types) is unchanged and falls through to the original generic path.
 - This fork also implements PageRank and single-source shortest path (see Algorithms above) and fixes an upstream `SparseVector` index-lookup bug that compared an element index against the stored entry count, which made high-index entries unreadable and silently dropped terms from sparse multiplies.
+- CSR and CSC matrix-vector multiplies take a dedicated path (`sparseFast.go`) that walks the compressed arrays directly, works for every element type, and honors masks per output row. At 10,000 vertices and ~100k edges, one mxv drops from 1.04 s and 825 MB allocated (the generic path materializes and binary-searches a vector per output row) to 73 µs and 16 B for CSR, roughly 14,000x, with CSC at 106 µs. This is what makes PageRank and breadth-first search practical on large graphs.
 
 Measured on an Apple M4 Pro with `go1.27.0`, 100x100 dense `float64`:
 
