@@ -22,6 +22,10 @@ func multiply[T constraints.Number](ctx context.Context, s, m Matrix[T], mask Ma
 	}
 
 	if mask == nil {
+		if denseMultiplyFast(ctx, s, m, matrix) {
+			return
+		}
+
 		mask = NewEmptyMask(matrix.Rows(), matrix.Columns())
 	}
 
@@ -177,6 +181,10 @@ func Add[T constraints.Number](ctx context.Context, s, m Matrix[T], mask Mask, m
 	}
 
 	if mask == nil {
+		if denseAddFast(ctx, s, m, matrix) {
+			return
+		}
+
 		mask = NewEmptyMask(matrix.Rows(), matrix.Columns())
 	}
 
