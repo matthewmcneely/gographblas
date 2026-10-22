@@ -41,6 +41,10 @@ func multiply[T constraints.Number](ctx context.Context, s, m Matrix[T], mask Ma
 		return
 	}
 
+	if sparseMatrixMatrixFast(ctx, s, m, mask, matrix) {
+		return
+	}
+
 	for r := 0; r < s.Rows(); r++ {
 		rows := s.RowsAt(r)
 
