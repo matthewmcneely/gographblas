@@ -95,6 +95,28 @@ unreachable := math.IsInf(dist.AtVec(4), 1)
 miles, route := shortestpath.Between[float64](ctx, g, 0, 3) // route holds the vertices, e.g. [0 1 3]
 ```
 
+### Clustering (`clustering`)
+
+Four ways to group vertices, each a different trade-off. `Markov`, `PeerPressure` and `Spectral` label every vertex and return one cluster index per vertex, numbered from 0 in order of each cluster's lowest vertex, so equal partitions always produce equal labels. `Local` answers a narrower question: which cluster does this one vertex belong to? `Groups` turns labels into member lists.
+
+- `Markov` is Markov clustering (MCL). Each round squares a stochastic flow matrix with one sparse mxm (expansion), then raises its values to a power and rescales (inflation), which strengthens flow inside dense regions and starves it between them. Clusters are the connected components of the converged flow. Larger inflation gives more, smaller clusters. The default of 2 is MCL's standard, but it over-splits sparse communities: on a 5,000-vertex planted graph of 50 blocks with ~22 in-block neighbors per vertex, inflation 2 returns 440 clusters while 1.4 to 1.6 recovers all 50 exactly (2.9 to 3.8 s on an M4 Pro). `MarkovWithOptions` takes the inflation.
+- `PeerPressure` starts every vertex in its own cluster and lets vertices vote: each vertex votes for its out-neighbors to join its cluster, and every vertex moves to its most-voted cluster until none move. The tally is one mxm per round, votes times the vertex-to-cluster assignment matrix. Votes follow edge direction, so list undirected edges both ways. Voting is local, so a sparse community can settle split in pieces; it suits graphs with dense communities.
+- `Spectral` is normalized spectral clustering (Ng, Jordan and Weiss) into at most `k` clusters: the `k` leading eigenvectors of the normalized adjacency, from orthogonal iteration at `k` mxv per round, embed each vertex, and k-means groups the embedding. It is the only one that needs `k` up front, and the most robust of the three on sparse communities because it looks at the whole graph at once. Isolated vertices are their own components and take up one of the `k` slots each.
+- `Local` grows a cluster around a seed vertex (Andersen, Chung and Lang): it approximates the seed's personalized PageRank by pushing probability outward in parallel rounds, one mxv each, then sweeps vertices by PageRank per unit of degree and returns the prefix with the lowest conductance. The seed is always in the result. Conductance favors larger sets up to half the graph's volume, so the cluster can absorb a neighboring community that is about as well separated from the rest; `LocalWithOptions` takes a larger teleport probability or push threshold to keep it closer to the seed.
+
+`Markov`, `Spectral` and `Local` treat the graph as undirected by symmetrizing `a + a'`, so an edge listed once is enough. Weights must be non-negative.
+
+```go
+labels := clustering.Markov[float64](ctx, g)            // e.g. [0 0 0 1 1 1]
+labels = clustering.PeerPressure[float64](ctx, g)
+labels = clustering.Spectral[float64](ctx, g, 3)        // at most 3 clusters
+for i, members := range clustering.Groups(labels) {
+	fmt.Println(i, members)
+}
+
+circle := clustering.Local[float64](ctx, g, 6) // the seed's cluster, in vertex order
+```
+
 ### GraphBLAS primitives (root package)
 
 The building blocks the algorithms compose, most of which accept an optional mask to control which output cells are written:
@@ -147,7 +169,7 @@ sorted := sort.BubbleRow(ctx, words) // words is a graphblas.MatrixRune
 
 ### Not yet implemented
 
-The `clustering` package (Markov, spectral, peer pressure, local) and the all-pairs and temporal shortest-path variants are declaration-only placeholders inherited from upstream: the files compile but contain no implementations. The primitives above are the pieces those algorithms would compose from.
+The all-pairs and temporal shortest-path variants are declaration-only placeholders inherited from upstream: the files compile but contain no implementations. The primitives above are the pieces those algorithms would compose from.
 
 ## About this fork
 
@@ -158,8 +180,9 @@ What changed:
 - `Multiply` and `Add` on dense `float64` matrices with a nil mask now run flat row kernels (`denseFast.go`) instead of the per-element interface path. Multiplication uses ikj ordering, so the inner step is a contiguous axpy over each output row.
 - The axpy/add kernels have two build variants: `kernels_simd.go` under `//go:build goexperiment.simd`, and scalar fallbacks in `kernels_scalar.go`. The default build has no dependency on the experimental API.
 - Everything else (masked operations, sparse formats, other element types) is unchanged and falls through to the original generic path.
-- This fork also implements PageRank and single-source shortest path (see Algorithms above) and fixes an upstream `SparseVector` index-lookup bug that compared an element index against the stored entry count, which made high-index entries unreadable and silently dropped terms from sparse multiplies.
+- This fork also implements PageRank, betweenness and closeness centrality, single-source and point-to-point shortest paths, and the four clustering algorithms (see Algorithms above), and fixes an upstream `SparseVector` index-lookup bug that compared an element index against the stored entry count, which made high-index entries unreadable and silently dropped terms from sparse multiplies.
 - CSR and CSC matrix-vector multiplies take a dedicated path (`sparseFast.go`) that walks the compressed arrays directly, works for every element type, and honors masks per output row. At 10,000 vertices and ~100k edges, one mxv drops from 1.04 s and 825 MB allocated (the generic path materializes and binary-searches a vector per output row) to 73 µs and 16 B for CSR, roughly 14,000x, with CSC at 106 µs. This is what makes PageRank and breadth-first search practical on large graphs.
+- Unmasked CSR x CSR matrix-matrix multiplies take a Gustavson kernel: each output row accumulates the rows of the right operand that its stored entries select, in a dense scratch row. Squaring a 2,000-vertex matrix with ~10 entries per row drops from 127 s and 1.9 GB allocated on the generic path (which scans every output cell and materializes a column vector per cell) to 4.6 ms. Markov and peer pressure clustering are built on it.
 - `NewCSRMatrixFromEdges` bulk-builds a CSR matrix from an edge list (duplicates sum, zero weights are skipped), and `TransposeToCSR` now collects entries and bulk-builds instead of inserting per element. At the same 10,000-vertex scale: 2.5 ms to construct 100k edges, and the transpose drops from 3.3 s and 40 GB allocated to 38 ms and 4.8 MB.
 
 Measured on an Apple M4 Pro with `go1.27.0`, 100x100 dense `float64`:
