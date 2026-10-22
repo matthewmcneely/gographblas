@@ -7,6 +7,7 @@ package graphblas
 
 import (
 	"context"
+	"sort"
 
 	"github.com/rossmerr/graphblas/binaryop"
 	"github.com/rossmerr/graphblas/constraints"
@@ -224,6 +225,94 @@ func cscMatrixVectorSemiring[T constraints.Number](ctx context.Context, a *CSCMa
 			y.values[r] = sums[r]
 		}
 	}
+
+	return true
+}
+
+// sparseMatrixMatrixFast is Gustavson's row-by-row sparse matrix multiply
+// for an unmasked CSR x CSR product into a CSR result. Each output row is
+// the sum of the rows of m selected by the stored entries of the matching
+// row of s, accumulated in a dense scratch row, so the work is
+// proportional to the multiply-adds performed rather than the generic
+// path's full r x c scan with a vector materialized per cell. The result
+// replaces the contents of out, matching the generic path, which writes
+// every cell; zero sums are not stored. The replacement arrays are built
+// separately and swapped in at the end, so out may alias s or m, and a
+// cancelled context leaves out unchanged. Returns false when the operand
+// types, shapes or mask do not match, leaving the caller to run the
+// generic path.
+func sparseMatrixMatrixFast[T constraints.Number](ctx context.Context, s, m Matrix[T], mask Mask, out Matrix[T]) bool {
+	if _, unmasked := mask.(*EmptyMask); !unmasked {
+		return false
+	}
+
+	a, ok := any(s).(*CSRMatrix[T])
+	if !ok {
+		return false
+	}
+
+	b, ok := any(m).(*CSRMatrix[T])
+	if !ok {
+		return false
+	}
+
+	c, ok := any(out).(*CSRMatrix[T])
+	if !ok {
+		return false
+	}
+
+	if a.c != b.r || c.r != a.r || c.c != b.c {
+		return false
+	}
+
+	zero := Default[T]()
+	acc := make([]T, b.c)
+	// marker[k] == r+1 when column k has been touched in output row r.
+	marker := make([]int, b.c)
+	touched := make([]int, 0, b.c)
+
+	rowStart := make([]int, a.r+1)
+	var cols []int
+	var values []T
+
+	for r := 0; r < a.r; r++ {
+		if r&1023 == 0 {
+			select {
+			case <-ctx.Done():
+				return true
+			default:
+			}
+		}
+
+		touched = touched[:0]
+		for j := a.rowStart[r]; j < a.rowStart[r+1]; j++ {
+			av := a.values[j]
+			k := a.cols[j]
+			for p := b.rowStart[k]; p < b.rowStart[k+1]; p++ {
+				col := b.cols[p]
+				if marker[col] != r+1 {
+					marker[col] = r + 1
+					acc[col] = av * b.values[p]
+					touched = append(touched, col)
+				} else {
+					acc[col] += av * b.values[p]
+				}
+			}
+		}
+
+		sort.Ints(touched)
+		for _, col := range touched {
+			if acc[col] != zero {
+				cols = append(cols, col)
+				values = append(values, acc[col])
+			}
+		}
+		rowStart[r+1] = len(cols)
+	}
+
+	c.rowStart = rowStart
+	c.cols = cols
+	c.values = values
 
 	return true
 }
