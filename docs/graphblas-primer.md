@@ -108,6 +108,10 @@ Where each shipped algorithm actually sits on the "is it matrix algebra?" spectr
 | Betweenness centrality | yes | masked mxv sweeps forward, plain mxv gathers backward |
 | Closeness centrality | yes | min-plus semiring mxv rounds per source |
 | PageRank | mostly | one mxv per iteration; scalar vector loops around it |
+| Markov clustering | yes | one sparse mxm per round, element-wise power and rescale |
+| Peer pressure clustering | yes | one sparse mxm per round, row-wise argmax |
+| Spectral clustering | partly | k mxv per round for the eigenvectors; k-means is plain loops |
+| Local clustering | partly | one mxv per push round; the conductance sweep is a sort and a scan |
 | `Between` (Dijkstra) | deliberately no | binary heap and adjacency scan |
 | Strassen multiplication | yes, by definition | recursive block mxm |
 | Reduced row echelon form | classic dense linear algebra | row operations via the matrix interface |
@@ -128,9 +132,17 @@ stopping when a round changes nothing or after n-1 rounds. The k-th round holds 
 
 **PageRank** (`centrality.PageRank`) is a hybrid, and representative of real-world GraphBLAS code. The expensive step, pulling rank along in-links, is a plus-times mxv against the transposed graph, so it rides the sparse kernels. The bookkeeping around it (dividing rank by out-degree, collecting dangling mass, applying damping and teleport, measuring the L1 delta) runs as plain loops over dense vectors. Each of those could be dressed up as element-wise algebra; the loops are clearer and cost O(n) against the multiply's O(edges).
 
+**Markov clustering** (`clustering.Markov`) is the cleanest mxm-shaped algorithm here. The flow matrix is row-stochastic, so `m * m` is two steps of a random walk, and expansion is literally one sparse multiply. Inflation is element-wise: raise each stored value to a power, rescale each row, prune values too small to matter. Pruning is what keeps the iterate sparse; without it, expansion fills the matrix in within a few rounds and every multiply goes dense. The product rides the Gustavson CSR x CSR kernel added for this package, since the generic mxm path is O(n²) cells regardless of sparsity.
+
+**Peer pressure clustering** (`clustering.PeerPressure`) shows how to encode a function as a matrix. The vertex-to-cluster assignment becomes an n x n matrix `C` with a single 1 per row, and one mxm of the transposed vote shares against `C` tallies every vertex's votes for every cluster at once. The argmax that picks each vertex's winner has no semiring form worth using, so it is a scan over the product's stored entries.
+
+**Spectral clustering** (`clustering.Spectral`) splits the work. The eigenvectors come from orthogonal iteration, where each round applies the normalized adjacency to `k` vectors as `k` mxv and then re-orthogonalizes them; that is the GraphBLAS part, and it is where the cost scales with edges. The k-means step that follows runs over an n x k dense embedding and has nothing to do with the graph anymore, so it is ordinary loops. The solver works in `float64` whatever the input type, so the default subspace tolerance of `1e-6` stays reachable for `float32` graphs.
+
+**Local clustering** (`clustering.Local`) is the interesting compromise. The Andersen-Chung-Lang push algorithm is normally sequential: pop a vertex with enough residual probability, push it to its neighbors, repeat. The parallel formulation (Shun et al.) pushes every eligible vertex at once, and that step is one mxv of the adjacency against the eligible residuals. The catch is that this library's vectors are dense, so each round costs O(edges) even though only a neighborhood holds probability. The result depends only on the seed's neighborhood, but the cost doesn't stay local yet. Sparse frontier vectors with a multiply that skips zero entries would fix most of that.
+
 **Point-to-point shortest path** (`shortestpath.Between`) is deliberately not matrix algebra: it is Dijkstra with a binary heap and early exit. A priority queue settles one vertex at a time in a data-dependent order, which has no useful matrix formulation, and the early exit (stop the moment the target settles) is the entire point of a point-to-point query. Bulk semiring iterations cannot stop early that way. This mirrors the wider ecosystem: even SuiteSparse-based stacks step outside the algebra for this query shape, and LAGraph's SSSP uses delta-stepping rather than Dijkstra precisely because Dijkstra will not vectorize.
 
-**The stubs** (`clustering`, all-pairs and temporal shortest paths) are unimplemented, but matrix-native on paper, which makes them approachable first contributions: Markov clustering alternates mxm (expansion) with element-wise powers and rescaling (inflation); all-pairs shortest paths is repeated min-plus multiplication, `A^(n-1)` over the tropical semiring.
+**The stubs** (all-pairs and temporal shortest paths) are unimplemented, but matrix-native on paper, which makes them approachable first contributions: all-pairs shortest paths is repeated min-plus multiplication, `A^(n-1)` over the tropical semiring, and would need a semiring variant of the sparse mxm kernel.
 
 ## Where the algebra stops: performance and hardware
 
@@ -141,6 +153,7 @@ The algebra is the specification, never the implementation. A min-plus multiply 
 | dense x dense mxm and add, `float64`, unmasked | scalar axpy/add kernels over flat rows | vector kernels via Go 1.27's portable `simd` package (128-bit NEON on arm64, up to 512-bit AVX on amd64) |
 | CSR/CSC mxv, plus-times | scalar walk over the compressed arrays | same, scalar |
 | CSR/CSC mxv, any semiring | scalar walk plus two interface calls per stored entry | same, scalar |
+| CSR x CSR mxm, plus-times, unmasked | Gustavson row accumulation into a dense scratch row | same, scalar |
 | masked mxm, mixed operand types, everything else | generic interface-driven path | same |
 
 Three findings from benchmarking this fork put the tiers in perspective (numbers and hardware details in the [README](../README.md)):
@@ -156,4 +169,4 @@ The pluggable semiring adds one more tier boundary: its two interface-method cal
 - [The GraphBLAS Forum](https://graphblas.github.io/) and the [GraphBLAS C API specification](https://graphblas.org/)
 - [SuiteSparse:GraphBLAS](https://github.com/DrTimothyAldenDavis/GraphBLAS), the reference implementation, and [LAGraph](https://github.com/GraphBLAS/LAGraph), the algorithm library on top of it
 - Kepner & Gilbert, *Graph Algorithms in the Language of Linear Algebra* (SIAM, 2011)
-- The runnable `Example` tests in this repo (`breadthfirst`, `centrality`, `shortestPath`, and the root package), which show each idea on a small named-vertex graph with verified output
+- The runnable `Example` tests in this repo (`breadthfirst`, `centrality`, `clustering`, `shortestPath`, and the root package), which show each idea on a small named-vertex graph with verified output
