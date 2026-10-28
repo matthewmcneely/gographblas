@@ -6,8 +6,8 @@ package operators
 // https://opensource.org/licenses/MIT
 
 import (
-	"github.com/rossmerr/graphblas/binaryop"
-	"github.com/rossmerr/graphblas/unaryop"
+	"github.com/matthewmcneely/gographblas/binaryop"
+	"github.com/matthewmcneely/gographblas/unaryop"
 )
 
 // LOR logical OR f(x, y) = x ∨ y

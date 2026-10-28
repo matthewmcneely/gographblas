@@ -8,8 +8,8 @@ package skewsymmetric_test
 import (
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/math/skewsymmetric"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/math/skewsymmetric"
 )
 
 func TestMatrix_SkewSymmetric(t *testing.T) {

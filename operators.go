@@ -11,9 +11,9 @@ import (
 
 	"context"
 
-	"github.com/rossmerr/graphblas/binaryop"
-	"github.com/rossmerr/graphblas/constraints"
-	"github.com/rossmerr/graphblas/unaryop"
+	"github.com/matthewmcneely/gographblas/binaryop"
+	"github.com/matthewmcneely/gographblas/constraints"
+	"github.com/matthewmcneely/gographblas/unaryop"
 )
 
 func multiply[T constraints.Number](ctx context.Context, s, m Matrix[T], mask Mask, matrix Matrix[T]) {

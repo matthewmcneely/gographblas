@@ -10,9 +10,9 @@ import (
 	"log"
 	"math"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/binaryop"
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/binaryop"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // Closeness computes closeness centrality for every vertex of the weighted

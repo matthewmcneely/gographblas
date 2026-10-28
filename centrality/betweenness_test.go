@@ -11,8 +11,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/centrality"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/centrality"
 )
 
 // referenceBetweenness is the classic queue-based Brandes algorithm,

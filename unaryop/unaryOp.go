@@ -5,7 +5,7 @@
 
 package unaryop
 
-import "github.com/rossmerr/graphblas/constraints"
+import "github.com/matthewmcneely/gographblas/constraints"
 
 // UnaryOpFloat64 is a function that maps one input value to one output value
 type UnaryOp[T constraints.None] interface {

@@ -9,7 +9,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // DenseVector a vector

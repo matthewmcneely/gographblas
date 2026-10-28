@@ -8,8 +8,8 @@ package symmetric_test
 import (
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/math/symmetric"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/math/symmetric"
 )
 
 func TestMatrix_Symmetric(t *testing.T) {

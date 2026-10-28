@@ -11,8 +11,8 @@ import (
 	"log"
 	"math"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // Between returns the shortest distance from vertex s to vertex t and the

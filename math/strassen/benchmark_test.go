@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/math/strassen"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/math/strassen"
 )
 
 var denseMatrix graphblas.Matrix[float64]

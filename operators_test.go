@@ -9,7 +9,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
+	"github.com/matthewmcneely/gographblas"
 )
 
 func setupMatrix(m graphblas.MatrixLogical[float64]) {

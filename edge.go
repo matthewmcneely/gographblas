@@ -9,7 +9,7 @@ import (
 	"log"
 	"sort"
 
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // Edge is a weighted directed edge for building sparse matrices: Weight is

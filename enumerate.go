@@ -5,7 +5,7 @@
 
 package graphblas
 
-import "github.com/rossmerr/graphblas/constraints"
+import "github.com/matthewmcneely/gographblas/constraints"
 
 // Enumerate iterates over the matrix
 type Enumerate[T constraints.Type] interface {

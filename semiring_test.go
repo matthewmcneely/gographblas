@@ -10,8 +10,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/binaryop"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/binaryop"
 )
 
 // TestSemiringPlusTimesMatchesMultiply cross-validates the semiring

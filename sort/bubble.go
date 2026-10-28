@@ -3,7 +3,7 @@ package sort
 import (
 	"context"
 
-	"github.com/rossmerr/graphblas"
+	"github.com/matthewmcneely/gographblas"
 )
 
 func BubbleRow(ctx context.Context, a graphblas.MatrixRune) graphblas.MatrixRune {

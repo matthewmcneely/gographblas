@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
+	"github.com/matthewmcneely/gographblas"
 )
 
 var denseMatrix graphblas.Matrix[float64]

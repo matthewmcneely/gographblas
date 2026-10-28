@@ -6,7 +6,7 @@
 package binaryop
 
 import (
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // MonoIDFloat64 is a set of float64's that closed under an associative binary operation

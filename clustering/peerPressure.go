@@ -9,8 +9,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // DefaultPeerPressureIterations caps the voting rounds when the labels

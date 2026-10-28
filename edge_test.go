@@ -10,7 +10,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
+	"github.com/matthewmcneely/gographblas"
 )
 
 func TestNewCSRMatrixFromEdgesMatchesFromArray(t *testing.T) {

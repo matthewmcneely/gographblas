@@ -9,8 +9,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/clustering"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/clustering"
 )
 
 // friendships is a small social network: a book club and a climbing gym

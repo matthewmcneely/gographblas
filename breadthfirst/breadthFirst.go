@@ -8,8 +8,8 @@ package breadthfirst
 import (
 	"context"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // Search a breadth-first search s is the source

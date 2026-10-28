@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	shortestpath "github.com/rossmerr/graphblas/shortestPath"
+	"github.com/matthewmcneely/gographblas"
+	shortestpath "github.com/matthewmcneely/gographblas/shortestPath"
 )
 
 func TestBetweenKnownPath(t *testing.T) {

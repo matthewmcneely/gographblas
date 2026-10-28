@@ -10,8 +10,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/sort"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/sort"
 )
 
 func TestBubbleColumns(t *testing.T) {

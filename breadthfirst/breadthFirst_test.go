@@ -9,8 +9,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/breadthfirst"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/breadthfirst"
 )
 
 func TestBreadthFirstSearch(t *testing.T) {

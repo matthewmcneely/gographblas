@@ -6,7 +6,7 @@
 package graphblas
 
 import (
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 type vector[T constraints.Type] interface {

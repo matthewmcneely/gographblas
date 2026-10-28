@@ -10,8 +10,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/centrality"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/centrality"
 )
 
 // referencePageRank is an independent straightforward power iteration used

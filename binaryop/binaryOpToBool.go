@@ -5,7 +5,7 @@
 
 package binaryop
 
-import "github.com/rossmerr/graphblas/constraints"
+import "github.com/matthewmcneely/gographblas/constraints"
 
 type BinaryOpToBool[T constraints.None] interface {
 	Apply(T, T) bool

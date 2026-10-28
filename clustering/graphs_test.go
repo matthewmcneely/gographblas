@@ -10,7 +10,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
+	"github.com/matthewmcneely/gographblas"
 )
 
 // undirected lists each edge in both directions.

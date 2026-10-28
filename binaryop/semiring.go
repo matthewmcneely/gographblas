@@ -8,7 +8,7 @@ package binaryop
 import (
 	"math"
 
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // Semiring pairs an additive monoid with a multiplicative binary operator.
