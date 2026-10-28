@@ -1,4 +1,4 @@
-// Copyright (c) 2018 Ross Merrigan
+// Copyright (c) 2026 Matthew McNeely
 //
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
