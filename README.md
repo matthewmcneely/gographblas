@@ -1,7 +1,12 @@
 # ~GraphBLAS~ gographblas
 
-![Go](https://github.com/matthewmcneely/gographblas/workflows/Go/badge.svg)
-[![Read the Docs](https://pkg.go.dev/badge/golang.org/x/pkgsite)](https://pkg.go.dev/github.com/matthewmcneely/gographblas)
+[![CI](https://github.com/matthewmcneely/gographblas/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/matthewmcneely/gographblas/actions/workflows/go.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/matthewmcneely/gographblas.svg)](https://pkg.go.dev/github.com/matthewmcneely/gographblas)
+[![Go Report Card](https://goreportcard.com/badge/github.com/matthewmcneely/gographblas)](https://goreportcard.com/report/github.com/matthewmcneely/gographblas)
+[![codecov](https://codecov.io/gh/matthewmcneely/gographblas/graph/badge.svg)](https://codecov.io/gh/matthewmcneely/gographblas)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/matthewmcneely/gographblas)](go.mod)
+[![Latest Tag](https://img.shields.io/github/v/tag/matthewmcneely/gographblas?sort=semver)](https://github.com/matthewmcneely/gographblas/tags)
+[![License](https://img.shields.io/github/license/matthewmcneely/gographblas)](LICENSE)
 
 A sparse linear algebra library implementing may of the ideas from the [GraphBLAS Forum](https://graphblas.github.io/) in Go.
 
