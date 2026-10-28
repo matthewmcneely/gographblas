@@ -6,3 +6,4 @@ debug.test
 *.svg
 /.vscode/
 /.idea/
+coverage.out

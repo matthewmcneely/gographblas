@@ -11,7 +11,7 @@ import (
 
 type IBinaryOp interface {
 	binaryOp()
-//	Apply(interface{}, interface{}) interface{}
+	// Apply(interface{}, interface{}) interface{}
 }
 
 // BinaryOpFloat64 is a function that maps two input value to one output value
