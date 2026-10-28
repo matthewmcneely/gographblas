@@ -10,8 +10,8 @@ import (
 	"log"
 	"math"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 const (

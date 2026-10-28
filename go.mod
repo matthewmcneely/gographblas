@@ -1,3 +1,3 @@
-module github.com/rossmerr/graphblas
+module github.com/matthewmcneely/gographblas
 
 go 1.27

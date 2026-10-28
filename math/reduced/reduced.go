@@ -6,8 +6,8 @@
 package reduced
 
 import (
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // Reduced row echelon form of matrix (Gauss-Jordan elimination)

@@ -9,7 +9,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
+	"github.com/matthewmcneely/gographblas"
 )
 
 // Regression tests for the SparseVector index lookup, which previously

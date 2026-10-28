@@ -6,8 +6,8 @@
 package skewsymmetric
 
 import (
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // SkewSymmetric (or antisymmetric or antimetric) matrix is a square matrix whose transpose equals its negative

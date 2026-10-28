@@ -9,8 +9,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/clustering"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/clustering"
 )
 
 func TestSpectralCliqueRing(t *testing.T) {

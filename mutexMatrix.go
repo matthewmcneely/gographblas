@@ -8,7 +8,7 @@ package graphblas
 import (
 	"sync"
 
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // MutexMatrix a matrix wrapper that has a mutex lock support

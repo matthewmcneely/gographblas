@@ -10,8 +10,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	shortestpath "github.com/rossmerr/graphblas/shortestPath"
+	"github.com/matthewmcneely/gographblas"
+	shortestpath "github.com/matthewmcneely/gographblas/shortestPath"
 )
 
 // weights has shortest paths from vertex 0 of [0, 1, 3, 4] and leaves

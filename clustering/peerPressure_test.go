@@ -10,8 +10,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/clustering"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/clustering"
 )
 
 // referencePeerPressure tallies votes vertex by vertex over dense arrays,

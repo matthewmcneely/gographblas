@@ -10,8 +10,8 @@ import (
 	"math"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/clustering"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/clustering"
 )
 
 // referenceMarkov runs MCL over dense arrays with the library's self-loop,

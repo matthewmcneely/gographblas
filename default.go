@@ -1,8 +1,8 @@
 package graphblas
 
 import (
-	"github.com/rossmerr/graphblas/binaryop"
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas/binaryop"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 func Zero[T any]() T {

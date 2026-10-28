@@ -8,7 +8,7 @@ package graphblas_test
 import (
 	"testing"
 
-	"github.com/rossmerr/graphblas"
+	"github.com/matthewmcneely/gographblas"
 )
 
 func TestVector_Update(t *testing.T) {

@@ -5,7 +5,7 @@
 
 package graphblas
 
-import "github.com/rossmerr/graphblas/constraints"
+import "github.com/matthewmcneely/gographblas/constraints"
 
 type matrix[T constraints.Type] interface {
 	MaskLogical

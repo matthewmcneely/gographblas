@@ -9,8 +9,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/breadthfirst"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/breadthfirst"
 )
 
 // ExampleSearch counts how many hops separate two people in a follow

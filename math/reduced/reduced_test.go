@@ -8,8 +8,8 @@ package reduced_test
 import (
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/math/reduced"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/math/reduced"
 )
 
 func TestMatrix_Reduced(t *testing.T) {

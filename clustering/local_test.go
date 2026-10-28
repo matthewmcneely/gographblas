@@ -11,8 +11,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/clustering"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/clustering"
 )
 
 // conductance is the weight of edges leaving set over the smaller of the

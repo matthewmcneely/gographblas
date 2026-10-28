@@ -8,7 +8,7 @@ package graphblas
 import (
 	"context"
 
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 // denseMultiplyFast is a specialized unmasked multiply for dense float64

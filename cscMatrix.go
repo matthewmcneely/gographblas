@@ -11,7 +11,7 @@ import (
 
 	"context"
 
-	"github.com/rossmerr/graphblas/constraints"
+	"github.com/matthewmcneely/gographblas/constraints"
 )
 
 func init() {

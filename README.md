@@ -86,7 +86,7 @@ cl := centrality.Closeness[float64](ctx, g)
 Note the package name is `shortestpath` while the import path ends in `shortestPath`.
 
 ```go
-import shortestpath "github.com/rossmerr/graphblas/shortestPath"
+import shortestpath "github.com/matthewmcneely/gographblas/shortestPath"
 
 dist := shortestpath.SingleSource[float64](ctx, g, 0)
 unreachable := math.IsInf(dist.AtVec(4), 1)

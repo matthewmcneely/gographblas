@@ -9,8 +9,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rossmerr/graphblas"
-	"github.com/rossmerr/graphblas/centrality"
+	"github.com/matthewmcneely/gographblas"
+	"github.com/matthewmcneely/gographblas/centrality"
 )
 
 // ExamplePageRank ranks the pages of a small website. Every page links

@@ -8,7 +8,7 @@ package graphblas_test
 import (
 	"fmt"
 
-	"github.com/rossmerr/graphblas"
+	"github.com/matthewmcneely/gographblas"
 )
 
 // Building a graph from an edge list reads better than a full 2D array:

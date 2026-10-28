@@ -8,8 +8,8 @@ package operators_test
 import (
 	"testing"
 
-	"github.com/rossmerr/graphblas/binaryop"
-	"github.com/rossmerr/graphblas/operators"
+	"github.com/matthewmcneely/gographblas/binaryop"
+	"github.com/matthewmcneely/gographblas/operators"
 )
 
 func Test_Equal(t *testing.T) {

@@ -5,7 +5,7 @@
 
 package graphblas
 
-import "github.com/rossmerr/graphblas/constraints"
+import "github.com/matthewmcneely/gographblas/constraints"
 
 // Map replace each element with the result of applying a function to its value
 type Map[T constraints.Type] interface {

@@ -3,7 +3,7 @@ package operators_test
 import (
 	"testing"
 
-	"github.com/rossmerr/graphblas/operators"
+	"github.com/matthewmcneely/gographblas/operators"
 )
 
 func Test_UnaryOp(t *testing.T) {

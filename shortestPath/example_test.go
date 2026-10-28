@@ -9,8 +9,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/rossmerr/graphblas"
-	shortestpath "github.com/rossmerr/graphblas/shortestPath"
+	"github.com/matthewmcneely/gographblas"
+	shortestpath "github.com/matthewmcneely/gographblas/shortestPath"
 )
 
 // ExampleSingleSource finds driving distances from Seattle on a small road
